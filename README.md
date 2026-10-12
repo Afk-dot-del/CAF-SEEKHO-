@@ -69,4 +69,21 @@ async function loadCloudContent(){if(!db)return;try{const [cr,lr]=await Promise.
 async function init(){renderLessons();renderProgress();selectLesson(lessons[0].id);const splash=$('appSplash');try{if(db){const s=await db.auth.getSession();user=s.data.session?.user||null;updateAuth();if(user){await loadProgress();await loadCloudContent();page(isOwner()?'owner':'home')}else{await loadPublicLive();page('account');setMsg('authMessage','Sign in or create an account to enter CAF SEEKHO.')}db.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;updateAuth();if(user){loadProgress();loadCloudContent();page(isOwner()?'owner':'home')}else{loadPublicLive();page('account')}})}else{updateAuth();page('account');setMsg('authMessage','Sign-in service could not load. Check your internet connection and open the app again.')}}catch(e){console.warn('Startup:',e);page('account');setMsg('authMessage','Could not check your session. Check your connection and try again.')}finally{renderLive();setTimeout(()=>{splash?.classList.add('done');clearTimeout(window.__cafSplashFailsafe)},450)}} 
 async function loadPublicLive(){if(!db){renderLive();return}try{const r=await db.from('live_sessions').select('id,title,course_id,stream_url,is_live,created_at').eq('is_live',true).order('created_at',{ascending:false}).limit(1);if(!r.error){live=r.data?.length?{id:r.data[0].id,title:r.data[0].title,url:r.data[0].stream_url,course_id:r.data[0].course_id,is_live:true,created_at:r.data[0].created_at}:null;if(live)localStorage.setItem('cafLive',JSON.stringify(live));else localStorage.removeItem('cafLive')}}catch(e){console.warn(e)}renderLive()} 
 init(); 
-</script></body></html> 
+</script> 
+<script> 
+/* Repair stray HTML-tag text accidentally shown by some copy/paste or publishing workflows. */ 
+document.addEventListener('DOMContentLoaded', function () { 
+  const tagText = /<\/?(?:div|header|nav|main|section|article|aside|footer|button|span|small|h[1-6]|p|form|label|input|textarea|select|option|ul|ol|li|a|img|video|iframe|strong|em|b|i)\b[^>]*>/i; 
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); 
+  const remove = []; 
+  while (walker.nextNode()) { 
+    const n = walker.currentNode; 
+    if (tagText.test(n.nodeValue || '') && /<\/?(?:div|header|nav|main|section|article|aside|footer|button|span|small|h[1-6]|p|form|label|input|textarea|select|option|ul|ol|li|a|img|video|iframe|strong|em|b|i)\b[^>]*>/i.test(n.nodeValue || '')) { 
+      const t = (n.nodeValue || '').trim(); 
+      if ((t.match(/<\/?[a-z][^>]*>/ig) || []).length >= 1) remove.push(n); 
+    } 
+  } 
+  remove.forEach(n => n.parentNode && n.parentNode.removeChild(n)); 
+}); 
+</script> 
+</body></html> 
